@@ -1,0 +1,10 @@
+apply_technical_analysis:
+  description: "Perform a comprehensive technical analysis of the stock AAPL"
+  expected_output: "A concise technical analysis report including..."
+
+develop_investment_strategy:
+  description: >
+    Develop a comprehensive investment strategy based on the analysis of financial data and market sentiment.
+    Consider various scenarios and provide actionable recommendations for different investor profiles.
+  expected_output: >
+    A tailored investment strategy that balances risk and reward, suitable for various investor profiles.
