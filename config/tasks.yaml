@@ -1,6 +1,6 @@
 apply_technical_analysis:
-  description: "Perform a comprehensive technical analysis of the stock AAPL"
-  expected_output: "A concise technical analysis report including..."
+  description: "Perform a comprehensive technical analysis of the stock {ticker}"
+  expected_output: "A concise technical analysis report including key indicators, chart patterns, and a summary of the stock's technical outlook."
 
 develop_investment_strategy:
   description: >

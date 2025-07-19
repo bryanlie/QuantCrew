@@ -1,0 +1,8 @@
+yfinance
+crewai
+crewai-tools
+numpy
+ta
+scipy
+python-dotenv
+requests

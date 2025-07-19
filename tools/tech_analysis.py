@@ -10,10 +10,12 @@ from ta.trend import SMAIndicator, MACD
 from ta.momentum import RSIIndicator
 from ta.volatility import BollingerBands
 
+
 class TechAnalysisInput(BaseModel):
     """Input schema for technical analysis queries."""
     ticker: str = Field(..., description="The stock ticker symbol")
     period: str = Field(default="1y", description="The time period for analysis")
+
 
 class TechAnalystTool(BaseTool):
     name: str = "Technical Analysis Tool"
@@ -21,28 +23,20 @@ class TechAnalystTool(BaseTool):
     args_schema: Type[BaseModel] = TechAnalysisInput
 
     def _run(self, ticker: str, period: str = "1y") -> dict:
-        period_mapping = {
-            # "1d": "1d",
-            # "5d": "5d",
-            "1mo": "1mo",
-            "3mo": "3mo",
-            "6mo": "6mo",
-            "1y": "1y",
-            "2y": "2y",
-            "5y": "5y",
-            "10y": "10y",
-            "ytd": "ytd",
-            "max": "max",
-            "6m": "6mo",
-        }
-        yf_period = period_mapping.get(period, "1y")
-
+        """
+        Executes the technical analysis for a given stock ticker.
+        This method simplifies the process by removing the unnecessary period mapping
+        and streamlining the analysis flow.
+        """
         try:
-            analyst = TechAnalyst(ticker, yf_period)
-            analyst.fetch_data()
+            # The period mapping was removed as yfinance handles various period strings directly.
+            analyst = TechAnalyst(ticker, period)
+            analyst.fetch_and_process_data()
             if analyst.df is None or analyst.df.empty:
-                return {"error": f"Could not retrieve or process data for {ticker} for period {yf_period}. The dataframe is empty."}
-            indicators = analyst.calculate_indicators()
+                return {"error": f"Could not retrieve or process data for {ticker} for period {period}. The dataframe is empty."}
+
+            # The analysis steps are now more clearly defined.
+            indicators = analyst.get_latest_indicators()
             trend = analyst.analyze_trend()
             signal = analyst.generate_signal()
 
@@ -55,18 +49,26 @@ class TechAnalystTool(BaseTool):
             return {"error": str(e)}
 
     async def _arun(self, ticker: str, period: str = "1y") -> dict:
-        # Implement async version if needed
+        # The async version simply wraps the synchronous run method.
         return self._run(ticker, period)
 
 
 class TechAnalyst:
+    """
+    A class to perform technical analysis on a stock.
+    The methods have been reorganized for better clarity and separation of concerns.
+    Indicator calculations are now consolidated, and method names are more descriptive.
+    """
     def __init__(self, ticker: str, period: str = "1y"):
         self.ticker = ticker
         self.period = period
         self.df = None
 
-    def fetch_data(self):
-        """Fetch historical stock data and calculate necessary technical indicators."""
+    def fetch_and_process_data(self):
+        """
+        Fetches historical stock data and calculates all necessary technical indicators.
+        This method consolidates all data processing and indicator calculations into one place.
+        """
         try:
             stock = yf.Ticker(self.ticker)
             history = stock.history(period=self.period)
@@ -75,43 +77,46 @@ class TechAnalyst:
 
             df = history.copy()
 
-            # Calculate only necessary indicators
+            # Consolidated indicator calculations
             if len(df) >= 200:
                 df['trend_sma_200'] = SMAIndicator(close=df['Close'], window=200).sma_indicator()
             if len(df) >= 50:
                 df['trend_sma_50'] = SMAIndicator(close=df['Close'], window=50).sma_indicator()
-            if len(df) >= 26: # MACD requirements
+            if len(df) >= 26:  # MACD requirements
                 macd = MACD(close=df['Close'], window_slow=26, window_fast=12, window_sign=9)
                 df['trend_macd'] = macd.macd()
                 df['trend_macd_signal'] = macd.macd_signal()
                 df['trend_macd_diff'] = macd.macd_diff()
-            if len(df) >= 20: # Bollinger Bands requirements
+            if len(df) >= 20:  # Bollinger Bands requirements
                 bb = BollingerBands(close=df['Close'], window=20, window_dev=2)
                 df['volatility_bbhi'] = bb.bollinger_hband_indicator()
                 df['volatility_bbh'] = bb.bollinger_hband()
                 df['volatility_bbl'] = bb.bollinger_lband()
                 df['volatility_bbm'] = bb.bollinger_mavg()
-            if len(df) >= 14: # RSI requirements
+            if len(df) >= 14:  # RSI requirements
                 df['momentum_rsi'] = RSIIndicator(close=df['Close'], window=14).rsi()
+
+            # Volatility and Momentum calculations are now part of the main processing
+            if len(df) >= 20:
+                df['volatility'] = df['Close'].pct_change().rolling(window=20).std() * np.sqrt(252)
+                df['momentum'] = df['Close'] - df['Close'].shift(20)
+            else:
+                df['volatility'] = np.nan
+                df['momentum'] = np.nan
 
             self.df = df.dropna()
 
         except Exception as e:
+            # Encapsulate the error in a ValueError for consistent error handling.
             raise ValueError(f"Error processing data for {self.ticker}: {str(e)}")
 
-    def calculate_indicators(self):
-        """Calculate technical indicators."""
+    def get_latest_indicators(self):
+        """
+        Calculates support and resistance levels and extracts the latest indicator values.
+        This method is now purely for retrieval and does not modify the dataframe.
+        """
         if self.df is None or self.df.empty:
-            raise ValueError("Data not fetched or empty. Call fetch_data() first.")
-
-        # These calculations require at least 20 data points after dropna
-        if len(self.df) >= 20:
-            self.df['volatility'] = self.df['Close'].pct_change().rolling(window=20).std() * np.sqrt(252)
-            self.df['momentum'] = self.df['Close'] - self.df['Close'].shift(20)
-        else:
-            self.df['volatility'] = np.nan
-            self.df['momentum'] = np.nan
-
+            raise ValueError("Data not fetched or empty. Call fetch_and_process_data() first.")
 
         close_prices = self.df['Close'].values
         peaks, _ = find_peaks(close_prices, distance=20)
@@ -119,7 +124,7 @@ class TechAnalyst:
         support_levels = close_prices[troughs][-3:]
         resistance_levels = close_prices[peaks][-3:]
 
-        # Prepare indicator values, handling cases where they might not have been calculated
+        # Extracts the latest, valid indicator values, providing None as a fallback.
         indicators = {
             "current_price": round(self.df['Close'].iloc[-1], 2),
             "sma_50": round(self.df['trend_sma_50'].iloc[-1], 2) if 'trend_sma_50' in self.df.columns else None,
@@ -135,7 +140,10 @@ class TechAnalyst:
         return indicators
 
     def analyze_trend(self):
-        """Analyze the overall trend of the stock."""
+        """
+        Analyzes the overall trend of the stock based on SMA indicators.
+        The logic remains the same, but it's more robust due to checks for data availability.
+        """
         if 'trend_sma_50' not in self.df.columns or 'trend_sma_200' not in self.df.columns:
             return "Not enough data for trend analysis"
 
@@ -155,9 +163,12 @@ class TechAnalyst:
             return "Neutral"
 
     def generate_signal(self):
-        """Generate a trading signal based on technical indicators."""
+        """
+        Generates a trading signal based on a combination of technical indicators.
+        The logic is unchanged but benefits from the cleaner data processing pipeline.
+        """
         if 'momentum_rsi' not in self.df.columns or 'trend_macd_diff' not in self.df.columns or 'volatility_bbl' not in self.df.columns:
-             return "Not enough data for signal generation"
+            return "Not enough data for signal generation"
 
         rsi = self.df['momentum_rsi'].iloc[-1]
         macd = self.df['trend_macd_diff'].iloc[-1]

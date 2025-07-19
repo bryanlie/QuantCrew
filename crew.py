@@ -14,8 +14,6 @@ class QuantCrew:
     def __init__(self, provider="openai"):
         if provider == "openai":
             self.llm = LLM(model="gpt-4o-mini")
-        elif provider == "ollama":
-            self.llm = LLM(model="ollama/phi3:latest", base_url="http://localhost:11434")
         else:
             raise ValueError(f"Unsupported provider: {provider}")
 
