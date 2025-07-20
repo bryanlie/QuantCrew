@@ -1,8 +1,9 @@
-yfinance
 crewai
-crewai-tools
-numpy
-ta
-scipy
+crewai_tools
+langchain_community
 python-dotenv
+streamlit
+pandas
+plotly
+textblob
 requests

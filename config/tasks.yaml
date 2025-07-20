@@ -1,10 +1,47 @@
 apply_technical_analysis:
-  description: "Perform a comprehensive technical analysis of the stock {ticker}"
-  expected_output: "A concise technical analysis report including key indicators, chart patterns, and a summary of the stock's technical outlook."
+  description: >
+    Conduct thorough technical analysis for the stock {ticker} over the period {period}.
+    Focus on identifying key technical indicators, chart patterns, and trading signals.
+  expected_output: >
+    A detailed technical analysis report including key indicators like SMA, RSI, MACD, support/resistance levels, and a concluding summary with a buy/hold/sell signal.
+
+analyze_fundamentals:
+  description: >
+    Perform comprehensive fundamental analysis for the stock {ticker}.
+    Focus on calculating key financial ratios and metrics to assess the company's financial health.
+  expected_output: >
+    A detailed fundamental analysis report that includes key financial metrics such as market cap, PE ratio, revenue growth, and free cash flow.
+
+analyze_competitors:
+  description: >
+    Conduct a thorough competitor analysis for the stock {ticker}.
+    Focus on identifying key competitors in the same industry and gathering relevant financial metrics for each competitor.
+  expected_output: >
+    A detailed competitor analysis report that includes information on market capitalization, price-to-earnings ratio, revenue growth, and profit margins for each competitor.
+
+assess_risk:
+  description: >
+    Perform a comprehensive risk assessment for the stock {ticker}.
+    Focus on calculating key risk metrics such as beta, Sharpe ratio, Value at Risk (VaR), and maximum drawdown.
+  expected_output: >
+    A detailed risk assessment report that includes key metrics such as beta, Sharpe ratio, Value at Risk (VaR), maximum drawdown, and volatility.
+
+analyze_sentiment:
+  description: >
+    Analyze market sentiment for the stock {ticker} using news articles and social media data.
+    Evaluate how current sentiment might affect the stock's performance.
+  expected_output: >
+    A sentiment analysis report that outlines the current market sentiment and its implications for the stock.
 
 develop_investment_strategy:
   description: >
-    Develop a comprehensive investment strategy based on the analysis of financial data and market sentiment.
-    Consider various scenarios and provide actionable recommendations for different investor profiles.
+    Based on all the gathered analysis (technical, fundamental, competitor, risk, sentiment),
+    develop a comprehensive investment strategy for the stock {ticker}.
+    Consider various scenarios and provide actionable recommendations for different investor profiles (e.g., conservative, moderate, aggressive).
   expected_output: >
-    A tailored investment strategy that balances risk and reward, suitable for various investor profiles.
+    A single, valid JSON object. The JSON object must contain the following keys: 
+    'technical_analysis', 'fundamental_analysis', 'competitor_analysis', 'risk_assessment', 
+    'sentiment_analysis', and 'investment_strategy'. Each key should contain the detailed report 
+    for that section. The 'investment_strategy' key should contain the final comprehensive 
+    investment strategy document with clear, actionable recommendations, entry points, price targets, 
+    and stop-loss levels. Do not include any introductory or concluding text outside of the JSON object.
