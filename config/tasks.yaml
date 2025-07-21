@@ -26,22 +26,15 @@ assess_risk:
   expected_output: >
     A detailed risk assessment report that includes key metrics such as beta, Sharpe ratio, Value at Risk (VaR), maximum drawdown, and volatility.
 
-analyze_sentiment:
-  description: >
-    Analyze market sentiment for the stock {ticker} using news articles and social media data.
-    Evaluate how current sentiment might affect the stock's performance.
-  expected_output: >
-    A sentiment analysis report that outlines the current market sentiment and its implications for the stock.
-
 develop_investment_strategy:
   description: >
-    Based on all the gathered analysis (technical, fundamental, competitor, risk, sentiment),
+    Based on all the gathered analysis (technical, fundamental, competitor, risk),
     develop a comprehensive investment strategy for the stock {ticker}.
     Consider various scenarios and provide actionable recommendations for different investor profiles (e.g., conservative, moderate, aggressive).
   expected_output: >
     A single, valid JSON object. The JSON object must contain the following keys: 
     'technical_analysis', 'fundamental_analysis', 'competitor_analysis', 'risk_assessment', 
-    'sentiment_analysis', and 'investment_strategy'. Each key should contain the detailed report 
+    and 'investment_strategy'. Each key should contain the detailed report 
     for that section. The 'investment_strategy' key should contain the final comprehensive 
     investment strategy document with clear, actionable recommendations, entry points, price targets, 
     and stop-loss levels. Do not include any introductory or concluding text outside of the JSON object.

@@ -12,7 +12,6 @@ from tools.tech_analysis import TechAnalystTool
 from tools.fundamental_analysis import FundamentalAnalysisTool
 from tools.competitor_analysis import CompetitorAnalysisTool
 from tools.risk_assessment import RiskAssessmentTool
-from tools.sentiment_analysis import SentimentAnalysisTool
 
 from crewai import Agent, Crew, Process, Task, LLM, CrewOutput
 
@@ -52,7 +51,7 @@ class QuantCrew:
         # Instantiate agents once
         self.technical_analyst_agent = self.technical_analyst()
         self.financial_analyst_agent = self.financial_analyst()
-        self.sentiment_analyst_agent = self.sentiment_analyst()
+        self.risk_analyst_agent = self.risk_analyst()
         self.investment_strategist_agent = self.investment_strategist()
 
     @agent
@@ -73,18 +72,18 @@ class QuantCrew:
             goal=self._agents_def['financial_analyst']['goal'],
             backstory=self._agents_def['financial_analyst']['backstory'],
             verbose=True,
-            tools=[FundamentalAnalysisTool(), CompetitorAnalysisTool(), RiskAssessmentTool()],
+            tools=[FundamentalAnalysisTool(), CompetitorAnalysisTool()],
             llm=self.llm
         )
 
     @agent
-    def sentiment_analyst(self) -> Agent:
+    def risk_analyst(self) -> Agent:
         return Agent(
-            role=self._agents_def['sentiment_analyst']['role'],
-            goal=self._agents_def['sentiment_analyst']['goal'],
-            backstory=self._agents_def['sentiment_analyst']['backstory'],
+            role=self._agents_def['risk_analyst']['role'],
+            goal=self._agents_def['risk_analyst']['goal'],
+            backstory=self._agents_def['risk_analyst']['backstory'],
             verbose=True,
-            tools=[SentimentAnalysisTool()],
+            tools=[RiskAssessmentTool()],
             llm=self.llm
         )
 
@@ -130,16 +129,7 @@ class QuantCrew:
         return Task(
             description=self._tasks_def['assess_risk']['description'],
             expected_output=self._tasks_def['assess_risk']['expected_output'],
-            agent=self.financial_analyst_agent,
-            async_execution=True
-        )
-
-    @task
-    def analyze_sentiment(self) -> Task:
-        return Task(
-            description=self._tasks_def['analyze_sentiment']['description'],
-            expected_output=self._tasks_def['analyze_sentiment']['expected_output'],
-            agent=self.sentiment_analyst_agent,
+            agent=self.risk_analyst_agent,
             async_execution=True
         )
 
@@ -153,8 +143,7 @@ class QuantCrew:
                 self.apply_technical_analysis(),
                 self.analyze_fundamentals(),
                 self.analyze_competitors(),
-                self.assess_risk(),
-                self.analyze_sentiment()
+                self.assess_risk()
             ]
         )
 
@@ -165,7 +154,7 @@ class QuantCrew:
             agents=[
                 self.technical_analyst_agent,
                 self.financial_analyst_agent,
-                self.sentiment_analyst_agent,
+                self.risk_analyst_agent,
                 self.investment_strategist_agent
             ],
             tasks=[
@@ -174,7 +163,6 @@ class QuantCrew:
                 self.apply_technical_analysis(),
                 self.analyze_competitors(),
                 self.assess_risk(),
-                self.analyze_sentiment(),
                 # This task will run sequentially after the above tasks are complete
                 self.develop_investment_strategy()
             ],

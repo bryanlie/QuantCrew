@@ -5,13 +5,13 @@ technical_analyst:
 
 financial_analyst:
   role: 'Financial Analyst'
-  goal: 'Analyze the given stock''s fundamental health, competitor landscape, and financial risks to provide a comprehensive evaluation.'
+  goal: 'Analyze the given stock''s fundamental health and competitor landscape to provide a comprehensive evaluation.'
   backstory: "You're a seasoned financial analyst known for your accurate predictions and ability to synthesize complex information into actionable insights."
 
-sentiment_analyst:
-  role: 'Sentiment Analyst'
-  goal: 'Analyze market sentiment for {ticker} using news and social media data and assess its potential impact on the stock price.'
-  backstory: "You're an expert in behavioral finance and sentiment analysis, capable of gauging market emotions and their effects on stock performance."
+risk_analyst:
+  role: 'Risk Analyst'
+  goal: 'Analyze and quantify risk factors for {ticker}, including volatility, drawdown potential, sector-specific, and macro risks.'
+  backstory: "You are a meticulous risk analyst with a deep understanding of financial markets and a knack for identifying potential threats to an investment."
 
 investment_strategist:
   role: 'Investment Strategist'

@@ -9,6 +9,7 @@ from typing import Type
 from ta.trend import SMAIndicator, MACD
 from ta.momentum import RSIIndicator
 from ta.volatility import BollingerBands
+from ta.volume import OnBalanceVolumeIndicator
 
 
 class TechAnalysisInput(BaseModel):
@@ -87,6 +88,11 @@ class TechAnalyst:
                 df['trend_macd'] = macd.macd()
                 df['trend_macd_signal'] = macd.macd_signal()
                 df['trend_macd_diff'] = macd.macd_diff()
+            if len(df) >= 20:  # MACD 20 day
+                macd_20 = MACD(close=df['Close'], window_slow=20, window_fast=10, window_sign=9)
+                df['trend_macd_20'] = macd_20.macd()
+                df['trend_macd_signal_20'] = macd_20.macd_signal()
+                df['trend_macd_diff_20'] = macd_20.macd_diff()
             if len(df) >= 20:  # Bollinger Bands requirements
                 bb = BollingerBands(close=df['Close'], window=20, window_dev=2)
                 df['volatility_bbhi'] = bb.bollinger_hband_indicator()
@@ -95,6 +101,8 @@ class TechAnalyst:
                 df['volatility_bbm'] = bb.bollinger_mavg()
             if len(df) >= 14:  # RSI requirements
                 df['momentum_rsi'] = RSIIndicator(close=df['Close'], window=14).rsi()
+            if 'Volume' in df.columns:
+                df['volume_obv'] = OnBalanceVolumeIndicator(close=df['Close'], volume=df['Volume']).on_balance_volume()
 
             # Volatility and Momentum calculations are now part of the main processing
             if len(df) >= 20:
@@ -131,6 +139,8 @@ class TechAnalyst:
             "sma_200": round(self.df['trend_sma_200'].iloc[-1], 2) if 'trend_sma_200' in self.df.columns else None,
             "rsi": round(self.df['momentum_rsi'].iloc[-1], 2) if 'momentum_rsi' in self.df.columns else None,
             "macd": round(self.df['trend_macd_diff'].iloc[-1], 4) if 'trend_macd_diff' in self.df.columns else None,
+            "macd_20": round(self.df['trend_macd_diff_20'].iloc[-1], 4) if 'trend_macd_diff_20' in self.df.columns else None,
+            "obv": self.df['volume_obv'].iloc[-1] if 'volume_obv' in self.df.columns else None,
             "bollinger_hband": round(self.df['volatility_bbh'].iloc[-1], 2) if 'volatility_bbh' in self.df.columns else None,
             "support_levels": [round(level, 2) for level in support_levels],
             "resistance_levels": [round(level, 2) for level in resistance_levels],
