@@ -12,13 +12,6 @@ analyze_fundamentals:
   expected_output: >
     A detailed fundamental analysis report that includes key financial metrics such as market cap, PE ratio, revenue growth, and free cash flow.
 
-analyze_competitors:
-  description: >
-    Conduct a thorough competitor analysis for the stock {ticker}.
-    Focus on identifying key competitors in the same industry and gathering relevant financial metrics for each competitor.
-  expected_output: >
-    A detailed competitor analysis report that includes information on market capitalization, price-to-earnings ratio, revenue growth, and profit margins for each competitor.
-
 assess_risk:
   description: >
     Perform a comprehensive risk assessment for the stock {ticker}.
