@@ -10,7 +10,7 @@ def run():
     """
     inputs = {
         'ticker': "AAPL",
-        'period': "6mo"
+        'period': "1y"
     }
     # Instantiate the crew. The LLM is now configured within the QuantCrew class.
     quant_crew = QuantCrew()

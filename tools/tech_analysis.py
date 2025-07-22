@@ -26,25 +26,35 @@ class TechAnalystTool(BaseTool):
     def _run(self, ticker: str, period: str = "1y") -> dict:
         """
         Executes the technical analysis for a given stock ticker.
-        This method simplifies the process by removing the unnecessary period mapping
-        and streamlining the analysis flow.
+        Returns indicators, trend, signal, and reasoning.
         """
         try:
-            # The period mapping was removed as yfinance handles various period strings directly.
             analyst = TechAnalyst(ticker, period)
             analyst.fetch_and_process_data()
             if analyst.df is None or analyst.df.empty:
                 return {"error": f"Could not retrieve or process data for {ticker} for period {period}. The dataframe is empty."}
 
-            # The analysis steps are now more clearly defined.
             indicators = analyst.get_latest_indicators()
             trend = analyst.analyze_trend()
             signal = analyst.generate_signal()
 
+            # Generate reasoning string
+            reasoning = (
+                f"Technical analysis for {ticker} over {period}:\n"
+                f"Current price is {indicators.get('current_price', 'N/A')}. "
+                f"Trend is {trend}. Signal is {signal}. "
+                f"RSI: {indicators.get('rsi', 'N/A')}, "
+                f"MACD: {indicators.get('macd', 'N/A')}, "
+                f"Support levels: {indicators.get('support_levels', [])}, "
+                f"Resistance levels: {indicators.get('resistance_levels', [])}. "
+                f"Volatility: {indicators.get('volatility', 'N/A')}, Momentum: {indicators.get('momentum', 'N/A')}."
+            )
+
             return {
                 "indicators": indicators,
                 "trend": trend,
-                "signal": signal
+                "signal": signal,
+                "reasoning": reasoning
             }
         except Exception as e:
             return {"error": str(e)}
@@ -83,6 +93,8 @@ class TechAnalyst:
                 df['trend_sma_200'] = SMAIndicator(close=df['Close'], window=200).sma_indicator()
             if len(df) >= 50:
                 df['trend_sma_50'] = SMAIndicator(close=df['Close'], window=50).sma_indicator()
+            if len(df) >= 20:
+                df['trend_sma_20'] = SMAIndicator(close=df['Close'], window=20).sma_indicator()
             if len(df) >= 26:  # MACD requirements
                 macd = MACD(close=df['Close'], window_slow=26, window_fast=12, window_sign=9)
                 df['trend_macd'] = macd.macd()
@@ -135,6 +147,7 @@ class TechAnalyst:
         # Extracts the latest, valid indicator values, providing None as a fallback.
         indicators = {
             "current_price": round(self.df['Close'].iloc[-1], 2),
+            "sma_20": round(self.df['trend_sma_20'].iloc[-1], 2) if 'trend_sma_20' in self.df.columns else None,
             "sma_50": round(self.df['trend_sma_50'].iloc[-1], 2) if 'trend_sma_50' in self.df.columns else None,
             "sma_200": round(self.df['trend_sma_200'].iloc[-1], 2) if 'trend_sma_200' in self.df.columns else None,
             "rsi": round(self.df['momentum_rsi'].iloc[-1], 2) if 'momentum_rsi' in self.df.columns else None,

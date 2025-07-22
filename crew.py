@@ -10,7 +10,6 @@ load_dotenv()
 # Import tools
 from tools.tech_analysis import TechAnalystTool
 from tools.fundamental_analysis import FundamentalAnalysisTool
-from tools.competitor_analysis import CompetitorAnalysisTool
 from tools.risk_assessment import RiskAssessmentTool
 
 from crewai import Agent, Crew, Process, Task, LLM, CrewOutput
@@ -72,7 +71,7 @@ class QuantCrew:
             goal=self._agents_def['financial_analyst']['goal'],
             backstory=self._agents_def['financial_analyst']['backstory'],
             verbose=True,
-            tools=[FundamentalAnalysisTool(), CompetitorAnalysisTool()],
+            tools=[FundamentalAnalysisTool()],
             llm=self.llm
         )
 
@@ -115,14 +114,7 @@ class QuantCrew:
             async_execution=True
         )
 
-    @task
-    def analyze_competitors(self) -> Task:
-        return Task(
-            description=self._tasks_def['analyze_competitors']['description'],
-            expected_output=self._tasks_def['analyze_competitors']['expected_output'],
-            agent=self.financial_analyst_agent,
-            async_execution=True
-        )
+    # Removed competitor analysis task
     
     @task
     def assess_risk(self) -> Task:
@@ -142,7 +134,6 @@ class QuantCrew:
             context=[
                 self.apply_technical_analysis(),
                 self.analyze_fundamentals(),
-                self.analyze_competitors(),
                 self.assess_risk()
             ]
         )
@@ -158,14 +149,12 @@ class QuantCrew:
                 self.investment_strategist_agent
             ],
             tasks=[
-                # These tasks will run in parallel
                 self.analyze_fundamentals(),
                 self.apply_technical_analysis(),
-                self.analyze_competitors(),
                 self.assess_risk(),
-                # This task will run sequentially after the above tasks are complete
                 self.develop_investment_strategy()
             ],
             process=Process.sequential,
-            verbose=True
+            verbose=True,
+            full_output=True
         )

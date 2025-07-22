@@ -9,38 +9,26 @@ class FundamentalAnalysisTool(BaseTool):
     def _run(self, ticker: str) -> dict:
         """
         Perform comprehensive fundamental analysis on a given stock ticker.
-
-        Args:
-            ticker (str): The stock ticker symbol.
-
-        Returns:
-            dict: Comprehensive fundamental analysis results.
+        Returns key financial metrics, ratios, and reasoning.
         """
         stock = yf.Ticker(ticker)
         try:
             info = stock.info
-            # Add a more specific check for a valid info object
             if not info or info.get('trailingPE') is None:
                 return {"error": f"Could not retrieve valid financial info for {ticker}. It may be an invalid ticker."}
-            
             financials = stock.financials
             balance_sheet = stock.balance_sheet
             cash_flow = stock.cashflow
-
             if financials.empty or balance_sheet.empty or cash_flow.empty:
                 return {"error": f"Could not retrieve complete financial statements for {ticker}."}
-
         except Exception as e:
             return {"error": f"Failed to retrieve data for {ticker} from yfinance: {e}"}
 
-
-        # Helper to safely get the most recent value
         def get_latest(df, key):
             if key in df.index and not df.loc[key].empty:
                 return df.loc[key].iloc[0]
             return None
 
-        # Calculate additional financial ratios safely
         try:
             total_current_assets = get_latest(balance_sheet, 'Total Current Assets')
             total_current_liabilities = get_latest(balance_sheet, 'Total Current Liabilities')
@@ -52,10 +40,8 @@ class FundamentalAnalysisTool(BaseTool):
             operating_cash_flow = get_latest(cash_flow, 'Operating Cash Flow')
             capital_expenditures = get_latest(cash_flow, 'Capital Expenditure')
 
-            # Previous year's revenue and net income for growth calculation
             prev_total_revenue = financials.loc['Total Revenue'].iloc[1] if len(financials.loc['Total Revenue']) > 1 else None
             prev_net_income = financials.loc['Net Income'].iloc[1] if len(financials.loc['Net Income']) > 1 else None
-
 
             current_ratio = total_current_assets / total_current_liabilities if total_current_liabilities else None
             debt_to_equity = total_liabilities / total_equity if total_equity else None
@@ -63,11 +49,21 @@ class FundamentalAnalysisTool(BaseTool):
             roa = net_income / total_assets if total_assets else None
             revenue_growth = (total_revenue - prev_total_revenue) / prev_total_revenue if total_revenue and prev_total_revenue else None
             net_income_growth = (net_income - prev_net_income) / prev_net_income if net_income and prev_net_income else None
-            fcf = (operating_cash_flow + capital_expenditures) if operating_cash_flow and capital_expenditures else None # CapEx is usually negative
-
+            fcf = (operating_cash_flow + capital_expenditures) if operating_cash_flow and capital_expenditures else None
         except (KeyError, IndexError) as e:
             current_ratio = debt_to_equity = roe = roa = revenue_growth = net_income_growth = fcf = f"Calculation error: {e}"
 
+        # Generate reasoning string
+        reasoning = (
+            f"Fundamental analysis for {ticker}:\n"
+            f"Company: {info.get('longName', 'N/A')}, Sector: {info.get('sector', 'N/A')}, Industry: {info.get('industry', 'N/A')}. "
+            f"Market Cap: {info.get('marketCap', 'N/A')}, P/E Ratio: {info.get('trailingPE', 'N/A')}, Forward P/E: {info.get('forwardPE', 'N/A')}, PEG Ratio: {info.get('pegRatio', 'N/A')}. "
+            f"Price to Book: {info.get('priceToBook', 'N/A')}, Dividend Yield: {info.get('dividendYield', 'N/A')}. "
+            f"52 Week High: {info.get('fiftyTwoWeekHigh', 'N/A')}, 52 Week Low: {info.get('fiftyTwoWeekLow', 'N/A')}. "
+            f"Current Ratio: {current_ratio}, Debt to Equity: {debt_to_equity}, ROE: {roe}, ROA: {roa}. "
+            f"Revenue Growth: {revenue_growth}, Net Income Growth: {net_income_growth}, Free Cash Flow: {fcf}. "
+            f"Analyst Recommendation: {info.get('recommendationKey', 'N/A')}, Target Price: {info.get('targetMeanPrice', 'N/A')}."
+        )
 
         return {
             "ticker": ticker,
@@ -90,5 +86,6 @@ class FundamentalAnalysisTool(BaseTool):
             "net_income_growth": net_income_growth,
             "free_cash_flow": fcf,
             "analyst_recommendation": info.get('recommendationKey'),
-            "target_price": info.get('targetMeanPrice')
+            "target_price": info.get('targetMeanPrice'),
+            "reasoning": reasoning
         }

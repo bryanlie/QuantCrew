@@ -7,3 +7,5 @@ pandas
 plotly
 textblob
 requests
+holidays
+pandas_market_calendars

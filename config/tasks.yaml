@@ -33,8 +33,6 @@ develop_investment_strategy:
     Consider various scenarios and provide actionable recommendations for different investor profiles (e.g., conservative, moderate, aggressive).
   expected_output: >
     A single, valid JSON object. The JSON object must contain the following keys: 
-    'technical_analysis', 'fundamental_analysis', 'competitor_analysis', 'risk_assessment', 
-    and 'investment_strategy'. Each key should contain the detailed report 
-    for that section. The 'investment_strategy' key should contain the final comprehensive 
-    investment strategy document with clear, actionable recommendations, entry points, price targets, 
-    and stop-loss levels. Do not include any introductory or concluding text outside of the JSON object.
+    'recommendation', 'confidence_score', and 'rationale'. The 'rationale' should provide a clear, 
+    comprehensive explanation for the investment strategy, including entry points, price targets, and stop-loss levels.
+    Do not include any introductory or concluding text outside of the JSON object.
